@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:isolate';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:math_expressions/math_expressions.dart';
 
 Future<void> runTask(void Function(List) task, dynamic param) async {
@@ -102,17 +103,49 @@ void main() async {
   runApp(MainApp());
 }
 
-class MainApp extends StatelessWidget {
+class MainApp extends StatefulWidget {
   const MainApp({super.key});
+
+  @override
+  State<MainApp> createState() => _MainAppState();
+}
+
+class _MainAppState extends State<MainApp> {
+  String? base64Result;
+  final picker = ImagePicker();
+
+  Future<void> pickImageAndConvert() async {
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+    if (picked != null) {
+      await runTask(base64EncodeTask, picked.path);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.dark(),
       home: Scaffold(
-        body: Center(
-          child: Text("Isolate"),
+          body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: pickImageAndConvert,
+              child: Text("Rasm tanlash va base64ga o‘tkazish"),
+            ),
+            SizedBox(height: 20),
+            base64Result != null
+                ? Expanded(
+                    child: SingleChildScrollView(
+                      child: SelectableText(base64Result ?? ""),
+                    ),
+                  )
+                : Text("Hech qanday rasm tanlanmadi."),
+          ],
         ),
-      ),
+      )),
     );
   }
 }
